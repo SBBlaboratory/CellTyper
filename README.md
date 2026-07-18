@@ -7,7 +7,7 @@
 
 <p align="center">
   LLM-based cell type annotation for single-cell marker genes<br>
-  (human · mouse · <i>Arabidopsis thaliana</i>)
+  (v1: human · mouse · <i>Arabidopsis thaliana</i>)
 </p>
 
 <p align="center">

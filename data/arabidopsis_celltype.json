@@ -1,0 +1,223 @@
+{
+  "root": {
+    "Root epidermis": {
+      "Root hair cell": [],
+      "Non-hair root epidermal cell": []
+    },
+    "Ground tissue": {
+      "Root cortex": [],
+      "Root endodermis": {
+        "Endodermal passage cell": []
+      },
+      "Parenchyma cell": [],
+      "Sclerenchymal cell": []
+    },
+    "Root cap": {
+      "Columella root cap": ["Columella"],
+      "Lateral root cap": []
+    },
+    "Stele": {
+      "Pericycle": {
+        "Phloem pole pericycle": [],
+        "Xylem pole pericycle": []
+      },
+      "Phloem": {
+        "Protophloem": [],
+        "Sieve element": [],
+        "Companion cell": [],
+        "Phloem parenchyma": []
+      },
+      "Xylem": {
+        "Protoxylem": [],
+        "Metaxylem": [],
+        "tracheid": [],
+        "Xylem parenchyma": []
+      },
+      "Root procambium": []
+    },
+    "Meristematic cell": {
+      "Root apical meristem": {
+        "S phase": [],
+        "Stem cell niche": [],
+        "G1/G0 phase": [],
+        "G2/M phase" : []
+      },
+      "Root system ground meristem": []
+    },
+    "Lateral root": {
+      "Lateral root primordia": [],
+      "Lateral root tip": []
+    }
+  },
+  
+  "leaf": {
+    "unknown": {"proliferating cell": [], "stress-induced cell":[]},
+    "Leaf identity / region": {
+      "Rosette leaf": [],
+      "Leaf apex": [],
+      "Petiole": [],
+      "Embryonic leaf": {
+        "Cotyledon": ["Plant embryo cotyledon"]
+      }
+    },
+    "Leaf epidermis": {
+      "Leaf pavement cell": [],
+      "Stomatal lineage": {
+        "Leaf stomatal complex": [],
+        "Leaf guard cell": [],
+        "Guard mother cell": []
+      },
+      "Trichomes": []
+    },
+    "Leaf mesophyll": {
+      "Spongy mesophyll": [],
+      "Palisade mesophyll": []
+    },
+    "Leaf vascular system": {
+      "Vascular leaf": [],
+      "Leaf procambium": [],
+      "Phloem": {
+        "Protophloem": [],
+        "Sieve element": [],
+        "Companion cell": [],
+        "Phloem parenchyma": []
+      },
+      "Xylem": {
+        "Protoxylem": [],
+        "Tracheid": []
+      },
+      "Bundle sheath": []
+    },
+    "Specialized leaf structures": {
+      "Hydathodes": []
+    },
+    "Ground-like": {
+      "Cortex": [],
+      "Endodermis": []
+    },
+    "Cell cycle state": {
+      "S phase": [],
+      "G2/M phase": []
+    },
+    "Meristematic cell": []
+  },
+  
+  "fruit": {
+    "Fruit wall / pericarp": {
+      "Exocarp": [],
+      "Mesocarp": [],
+      "Endocarp": []
+    },
+    "Dehiscence / valve margin tissues": {
+      "Fruit dehiscence zone": [],
+      "Replum": [],
+      "Lignified Margin Layer": []
+    },
+    "Seed-associated tissues": {
+      "Seed coat epidermis": [],
+      "Endosperm": {
+        "Primary endosperm cell": [],
+        "Micropylar endosperm": [],
+        "Aleurone layer": []
+      }
+    },
+    "General": {
+      "Parenchyma cell": []
+    }
+  },
+  
+   "flower": {
+    "Male (anther/pollen) lineage": {
+      "Microspore": [],
+      "Pollen sperm cell": [],
+      "Pollen tube cell": []
+    },
+    "Anther wall / stamen tissues": {
+      "Stamen epidermis": [],
+      "Anther wall": [],
+      "Anther wall endothecium": ["Endothecium"],
+      "Middle layer": [],
+      "Tapetum": ["Anther wall tapetum cell"]
+    },
+    "Female (ovule/embryo sac) lineage": {
+      "Megaspore mother cell": [],
+      "Nucellus": [],
+      "Embryo sac": {
+        "Embryo sac egg cell": [],
+        "Embryo sac central cell": [],
+        "Synergid": [],
+        "Embryo sac antipodal cell": []
+      }
+    },
+    "Perianth epidermis": {
+      "Petal epidermis": [],
+      "Sepal epidermis": [],
+      "Sepal abaxial epidermis": []
+    },
+    "Specialized transport / interface": {
+      "Transfer cell": []
+    }
+  },
+  
+   "shoot apex": {
+    "Shoot apical meristem": {
+      "Meristem L1 layer": [],
+      "Central zone": [],
+      "Peripheral zone": []
+    },
+    "Shoot system epidermis": {
+      "Guard cell": []
+    },
+    "Internal tissues": {
+      "Mesophyll": []
+    },
+    "Vascular / cambial lineage": {
+      "Procambium cell": [],
+      "Phloem": {
+        "Companion cell": []
+      },
+      "Xylem": []
+    },
+    "Meristematic cell": [],
+    "Cell cycle state": {
+      "S phase": [],
+      "G2/M phase": []
+    }
+  },
+  
+  "stem": {
+    "Vascular system": {
+      "Cambial cell": [],
+      "Phloem": [],
+      "Xylem": []
+    },
+    "Epidermis": {
+      "Hypocotyl epidermis": []
+    },
+    "Cortex / ground tissues": {
+      "Cortex": [],
+      "Cortex parenchyma": [],
+      "Collenchyma cell": []
+    },
+    "Endodermis": [],
+    "Pith": {
+      "Pith parenchyma": []
+    }
+  }
+  
+  
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -134,7 +134,7 @@ result = run_celltyper(
     graph_provided=True,      # include marker–cell graph in the workflow / report
     html_report_path="CellTyper_report.html",
     llm_model="gpt-5.2",
-    max_workers=1,            # >1: annotate clusters in parallel
+    max_workers=3,            # recommended >1 to cut wall-clock time (parallel clusters)
     openai_api_key="sk-...",  # or use set_openai_api_key / OPENAI_API_KEY
 )
 
@@ -144,6 +144,8 @@ print(result["html_report_path"])  # open this HTML report to review full result
 ```
 
 **Important:** Treat the HTML report as the main result. Console / dict outputs are a short summary only.
+
+**Performance tip:** Set `max_workers` **greater than 1** (e.g. `2`–`4`) so multiple clusters annotate in parallel and **reduce total computation / wall-clock time**. The default remains `1` for safer sequential runs; raise it when you have several clusters and acceptable OpenAI rate limits.
 
 ---
 
@@ -219,7 +221,7 @@ Filtering (summary):
 | `graph_provided` | `True` | Build/use marker–cell graph (also controls report graph section) |
 | `html_report_path` | `CellTyper_report.html` | Output HTML path (`None` to skip) |
 | `llm_model` | `gpt-5.2` | OpenAI model for final annotation |
-| `max_workers` | `1` | Max parallel clusters |
+| `max_workers` | `1` | Max parallel clusters. **Recommended `>1`** (e.g. 2–4) to save wall-clock time when annotating many clusters; watch API rate limits |
 | `openai_api_key` | `None` | API key for this run (optional if env / `set_openai_api_key` already set) |
 
 ---
@@ -266,6 +268,7 @@ Example HTML report layout (scroll through each section in the generated file):
 
 - Final cell-type calls use **self-consistency** (multiple LLM samples + vote; ties are reported together).
 - With `genetriever_flag=False`, context comes from bundled **GeneDB** files when markers are present there.
+- **Prefer `max_workers > 1`** for multi-cluster runs to shorten overall runtime (clusters processed in parallel). Start modestly (e.g. 2–3) if you hit rate limits.
 - **OpenAI prompt caching / Responses API paths are used for GPT family models; other providers are not wired yet.**
 
 ---

@@ -258,8 +258,8 @@ Gene context retrieval builds on ideas from [GeneTriever](https://github.com/hyu
 
 ## Authors
 
-- **Hyun jin ChO** — Lead developer, methodology, software implementation  
-  [@GitHubID](https://github.com/hyun-jin891)
+- **Hyun jin Cho** — Lead developer, methodology, software implementation  
+  [hyun-jin891](https://github.com/hyun-jin891)
 
-- **Professor Name** — Supervision, project administration  
-  [@GitHubID](https://github.com/jeongdo801)
+- **Hyobin Jeong** — Supervision, project administration  
+  [jeongdo801](https://github.com/jeongdo801)

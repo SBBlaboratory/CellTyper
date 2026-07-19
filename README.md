@@ -1,4 +1,4 @@
-<h1 align="center"> CellTyper </h1> <br>
+<h1 align="center"> CellTyperv1 </h1> <br>
 <p align="center">
   <a href="https://github.com/hyun-jin891/CellTyper">
     <img alt="CellTyper" title="CellTyper" src="https://i.postimg.cc/JnbjNcgV/celltyper-logo.jpg" width="450">

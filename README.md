@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  LLM-based cell type annotation for single-cell marker genes<br>
+  Cell-Type Annotation LLM Agent for single-cell marker genes<br>
   (v1: human · mouse · <i>Arabidopsis thaliana</i>)
 </p>
 
@@ -23,7 +23,7 @@
 For each cluster it:
 
 1. Selects top marker genes  
-2. Builds gene context (geneDB and optional live GeneTriever retrieval)  
+2. Builds gene context (GeneDB and optional live GeneTriever retrieval)  
 3. Optionally builds a marker–cell graph  
 4. Runs LLM self-consistency voting  
 5. Writes an HTML report (prediction, contexts, consistency chart, graph)
@@ -42,7 +42,7 @@ For each cluster it:
 ## Installation
 
 ```bash
-git clone https://github.com/hyun-jin891/CellTyper.git
+git clone https://github.com/SBBlaboratory/CellTyper.git
 cd CellTyper
 
 # recommended: create a dedicated environment
@@ -124,10 +124,10 @@ from celltyper_public import run_celltyper
 
 result = run_celltyper(
     markers="path/to/markers.csv",
-    species="human",          # human | mouse | arabidopsis
+    species="human",          # human | mouse | Arabidopsis
     tissue="liver",
     condition="normal",
-    genetriever_flag=False,   # True: live retrieval for genes missing from geneDB
+    genetriever_flag=False,   # True: live retrieval for genes missing from GeneDB
     graph_provided=True,      # include marker–cell graph in the workflow / report
     html_report_path="CellTyper_report.html",
     llm_model="gpt-5.2",
@@ -172,6 +172,34 @@ Export with `sc.get.rank_genes_groups_df` (use `pts=True` when possible). CellTy
 | `logfoldchanges` / `scores` | ranking |
 | `pct_nz_group`, `pct_nz_reference` | optional; used like Seurat pct columns |
 
+Filtering (summary):
+
+- `pvals_adj < 0.05` (when the column is present)
+- if `pct_nz_group` is present: `pct_nz_group > 0.5`
+- ranking:
+  - with `pct_nz_group` + `pct_nz_reference` + `logfoldchanges`:  
+    `logfoldchanges × (pct_nz_group − pct_nz_reference)` (descending)
+  - else prefer `scores`, then `logfoldchanges`
+- per cluster: `logfoldchanges > 0.25` when available (otherwise score-ranked rows), then **top 10**
+
+---
+
+## Supported species and tissues
+
+`species` and `tissue` must match these names **exactly** (shown in lowercase; `run_celltyper` lowercases inputs).
+
+### `human`
+
+`adipose tissue`, `adrenal gland`, `axilla`, `blood`, `bladder organ`, `bone marrow`, `brain`, `breast`, `colon`, `embryo`, `endocrine gland`, `esophagus`, `exocrine gland`, `eye`, `fallopian tube`, `heart`, `intestine`, `kidney`, `lamina propria`, `large intestine`, `liver`, `lung`, `lymph node`, `mucosa`, `musculature`, `nose`, `omentum`, `ovary`, `pancreas`, `pleural fluid`, `placenta`, `prostate gland`, `respiratory system`, `saliva`, `skeletal system`, `skin of body`, `small intestine`, `spleen`, `stomach`, `tongue`, `urinary bladder`, `uterus`, `vasculature`
+
+### `mouse`
+
+`kidney`, `adipose tissue`, `blood`, `bone marrow`, `brain`, `colon`, `embryo`, `endocrine gland`, `exocrine gland`, `eye`, `heart`, `large intestine`, `liver`, `lung`, `lymph node`, `mucosa`, `musculature`, `ovary`, `pancreas`, `prostate gland`, `respiratory system`, `skeletal system`, `skin of body`, `small intestine`, `spleen`, `tongue`, `urethra`, `urinary bladder`, `vasculature`
+
+### `arabidopsis`
+
+`shoot`, `seedling`, `root`, `leaf`, `fruit`, `flower`, `shoot apex`, `stem`
+
 ---
 
 ## Main parameters
@@ -180,10 +208,10 @@ Export with `sc.get.rank_genes_groups_df` (use `pts=True` when possible). CellTy
 |---|---|---|
 | `markers` | — | Path to marker CSV |
 | `species` | — | `human`, `mouse`, or `arabidopsis` |
-| `tissue` | — | Tissue name (must match supported list for that species) |
+| `tissue` | — | Tissue name (must match the list above for that species) |
 | `condition` | — | Free-text condition passed to the LLM |
-| `genetriever_flag` | `False` | Live NCBI / MyGene / UniProt / STRING / … retrieval for geneDB misses |
-| `graph_provided` | `False` | Build/use marker–cell graph (also controls report graph section) |
+| `genetriever_flag` | `False` | Live NCBI / MyGene / UniProt / STRING / … retrieval for GeneDB misses |
+| `graph_provided` | `True` | Build/use marker–cell graph (also controls report graph section) |
 | `html_report_path` | `CellTyper_report.html` | Output HTML path (`None` to skip) |
 | `llm_model` | `gpt-5.2` | OpenAI model for final annotation |
 | `max_workers` | `1` | Max parallel clusters |
@@ -210,8 +238,8 @@ The HTML report includes predicted labels, per-marker gene context, self-consist
 ## Notes
 
 - Final cell-type calls use **self-consistency** (multiple LLM samples + vote; ties are reported together).
-- With `genetriever_flag=False`, context comes from bundled **geneDB** files when markers are present there.
-- OpenAI prompt caching / Responses API paths are used for GPT-5-family models; other providers are not wired yet.
+- With `genetriever_flag=False`, context comes from bundled **GeneDB** files when markers are present there.
+- **OpenAI prompt caching / Responses API paths are used for GPT family models; other providers are not wired yet.**
 
 ---
 
@@ -226,3 +254,12 @@ Third-party **databases and reference data** have their own terms. See [`data_li
 ## Citation / related
 
 Gene context retrieval builds on ideas from [GeneTriever](https://github.com/hyun-jin891/GeneTriever).
+
+
+## Authors
+
+- **Hyun jin ChO** — Lead developer, methodology, software implementation  
+  [@GitHubID](https://github.com/hyun-jin891)
+
+- **Professor Name** — Supervision, project administration  
+  [@GitHubID](https://github.com/jeongdo801)

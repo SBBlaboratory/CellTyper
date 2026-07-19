@@ -299,7 +299,7 @@ def run_celltyper(
     tissue,
     condition,
     genetriever_flag=False,
-    graph_provided=False,
+    graph_provided=True,
     html_report_path="CellTyper_report.html",
     llm_model="gpt-5.2",
     max_workers=1,

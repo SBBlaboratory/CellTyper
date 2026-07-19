@@ -28,6 +28,9 @@ For each cluster it:
 4. Runs LLM self-consistency voting  
 5. Writes an HTML report (prediction, contexts, consistency chart, graph)
 
+> **We strongly recommend reviewing the HTML report** (`CellTyper_report.html` by default) as the primary way to interpret CellTyper results.  
+> The returned `celltypes` list alone omits gene context, self-consistency votes, LLM samples, and the marker–cell graph that explain each prediction.
+
 ---
 
 ## Requirements
@@ -137,8 +140,10 @@ result = run_celltyper(
 
 print(result["cluster_ids"])
 print(result["celltypes"])
-print(result["html_report_path"])
+print(result["html_report_path"])  # open this HTML report to review full results
 ```
+
+**Important:** Treat the HTML report as the main result. Console / dict outputs are a short summary only.
 
 ---
 
@@ -221,6 +226,9 @@ Filtering (summary):
 
 ## Output
 
+> **Recommended:** Always open and inspect the HTML report after a run.  
+> It is the fullest view of CellTyper’s decisions and supporting evidence.
+
 `run_celltyper` returns a dict:
 
 ```python
@@ -231,7 +239,26 @@ Filtering (summary):
 }
 ```
 
-The HTML report includes predicted labels, per-marker gene context, self-consistency (pie chart), LLM samples, and (when enabled) the marker–cell graph.
+The HTML report includes predicted labels, per-marker gene context, self-consistency (pie chart), LLM samples, and (when enabled) the marker–cell graph. Prefer this report over relying only on `celltypes` in the return value.
+
+### Report preview
+
+Example HTML report layout (scroll through each section in the generated file):
+
+<p align="center">
+  <img src="https://i.postimg.cc/63mBrXt1/seukeulinsyas-2026-07-19-112629.png" alt="CellTyper report — cluster header, markers, and gene context" width="720">
+</p>
+<p align="center"><em>Cluster summary, input markers, and expandable gene context</em></p>
+
+<p align="center">
+  <img src="https://i.postimg.cc/4dSX6gsM/seukeulinsyas-2026-07-19-112646.png" alt="CellTyper report — self-consistency and LLM responses" width="720">
+</p>
+<p align="center"><em>Self-consistency pie chart and LLM sample responses</em></p>
+
+<p align="center">
+  <img src="https://i.postimg.cc/d1xJ2Ywp/seukeulinsyas-2026-07-19-112700.png" alt="CellTyper report — marker–cell graph" width="720">
+</p>
+<p align="center"><em>Marker–cell graph (when <code>graph_provided=True</code>)</em></p>
 
 ---
 
@@ -258,7 +285,7 @@ Gene context retrieval builds on ideas from [GeneTriever](https://github.com/hyu
 
 ## Authors
 
-- **Hyun jin Cho** — Lead developer, methodology, software implementation  
+- **Hyunjin Cho** — Lead developer, methodology, software implementation  
   [hyun-jin891](https://github.com/hyun-jin891)
 
 - **Hyobin Jeong** — Supervision, project administration  

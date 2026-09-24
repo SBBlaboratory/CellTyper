@@ -8,6 +8,7 @@ from typing import Dict, List, Optional, Set
 from celltyper_data import data_file
 from dotenv import load_dotenv
 from openai import OpenAI
+from openai_llm import openai_text_from_messages
 from xml.etree import ElementTree
 
 load_dotenv()
@@ -21,6 +22,13 @@ _ARABIDOPSIS_DB8_SYMBOL_MAP: Optional[Dict[str, str]] = None
 _GENE_DB_CACHE: Dict[str, pd.DataFrame] = {}
 _NCBI_TAIR_CACHE: Dict[str, List[str]] = {}
 _MAPPING_RESULT_CACHE: Dict[str, str] = {}
+
+
+GENETRIEVER_LLM_MODEL = "gpt-4o"
+
+
+def _genetriever_llm_model() -> str:
+  return GENETRIEVER_LLM_MODEL
 
 
 def _normalize_gene_db_species(species: str) -> str:
@@ -412,13 +420,13 @@ def scene_gene_function(state):
     """
       messages = [{"role": "user", "content": prompt}]
     
-      completion = llm.chat.completions.create(
-        model = "gpt-5.2",
-        messages = messages,
-        temperature = 0,
-        )
-    
-      mygene_MF_text = completion.choices[0].message.content
+      mygene_MF_text = openai_text_from_messages(
+        llm,
+        _genetriever_llm_model(),
+        messages,
+        temperature=0,
+        reasoning_effort="medium",
+      )
     except Exception as e:
       pass
     
@@ -589,12 +597,13 @@ def scene_pathway(state):
     
       messages = [{"role": "user", "content": prompt}]
       try:
-        completion = llm.chat.completions.create(
-          model = "gpt-5.2",
-          messages = messages,
-          temperature = 0,
+        pathway_text = openai_text_from_messages(
+          llm,
+          _genetriever_llm_model(),
+          messages,
+          temperature=0,
+          reasoning_effort="medium",
         )
-        pathway_text = completion.choices[0].message.content
         gene_pathway_context += pathway_text + "\n"
       except Exception as e:
         pathway_text = ""
@@ -624,13 +633,13 @@ def scene_pathway(state):
       """
       messages = [{"role": "user", "content": prompt}]
     
-      completion = llm.chat.completions.create(
-        model = "gpt-5.2",
-        messages = messages,
-        temperature = 0,
+      mygene_pathway_text = openai_text_from_messages(
+        llm,
+        _genetriever_llm_model(),
+        messages,
+        temperature=0,
+        reasoning_effort="medium",
       )
-    
-      mygene_pathway_text = completion.choices[0].message.content
     
     except Exception as e:
       pass
@@ -686,13 +695,13 @@ def scene_protein_location(state):
       """
       messages = [{"role": "user", "content": prompt}]
     
-      completion = llm.chat.completions.create(
-        model = "gpt-5.2",
-        messages = messages,
-        temperature = 0,
+      mygene_cc_text = openai_text_from_messages(
+        llm,
+        _genetriever_llm_model(),
+        messages,
+        temperature=0,
+        reasoning_effort="medium",
       )
-    
-      mygene_cc_text = completion.choices[0].message.content
     
     except Exception as e:
       pass
@@ -832,12 +841,14 @@ def p_p_interaction_info(state):
     """
     
       messages = [{"role": "user", "content": prompt}]
-      completion = llm.chat.completions.create(
-        model = "gpt-5.2",
-         messages = messages,
-         temperature = 0,
+      ppi_summary = openai_text_from_messages(
+        llm,
+        _genetriever_llm_model(),
+        messages,
+        temperature=0,
+        reasoning_effort="medium",
       )
-      ppi_context += completion.choices[0].message.content + "\n"
+      ppi_context += ppi_summary + "\n"
     except Exception as e:
       completion = None
   

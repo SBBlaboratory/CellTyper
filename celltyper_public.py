@@ -60,6 +60,99 @@ def _ensure_openai_api_key(openai_api_key=None) -> None:
         )
 
 
+def _validate_species_tissue(species: str, tissue: str):
+    species = species.lower().strip()
+    tissue = tissue.lower().strip()
+
+    if species not in ["human", "mouse", "arabidopsis"]:
+        raise ValueError("Invalid species. Please choose from: human, mouse, arabidopsis")
+
+    if species == "human":
+        allowed = [
+            "adipose tissue", "adrenal gland", "axilla", "blood", "bladder organ",
+            "bone marrow", "brain", "breast", "colon", "embryo", "endocrine gland",
+            "esophagus", "exocrine gland", "eye", "fallopian tube", "heart",
+            "intestine", "kidney", "lamina propria", "large intestine", "liver",
+            "lung", "lymph node", "mucosa", "musculature", "nose", "omentum",
+            "ovary", "pancreas", "pleural fluid", "placenta", "prostate gland",
+            "respiratory system", "saliva", "skeletal system", "skin of body",
+            "small intestine", "spleen", "stomach", "tongue", "urinary bladder",
+            "uterus", "vasculature",
+        ]
+        if tissue not in allowed:
+            raise ValueError(
+                "Invalid tissue for human. Please choose from: " + ", ".join(allowed)
+            )
+    elif species == "mouse":
+        allowed = [
+            "kidney", "adipose tissue", "blood", "bone marrow", "brain", "colon",
+            "embryo", "endocrine gland", "exocrine gland", "eye", "heart",
+            "large intestine", "liver", "lung", "lymph node", "mucosa", "musculature",
+            "ovary", "pancreas", "prostate gland", "respiratory system",
+            "skeletal system", "skin of body", "small intestine", "spleen", "tongue",
+            "urethra", "urinary bladder", "vasculature",
+        ]
+        if tissue not in allowed:
+            raise ValueError(
+                "Invalid tissue for mouse. Please choose from: " + ", ".join(allowed)
+            )
+    elif species == "arabidopsis":
+        allowed = [
+            "shoot", "seedling", "root", "leaf", "fruit", "flower", "shoot apex", "stem",
+        ]
+        if tissue not in allowed:
+            raise ValueError(
+                "Invalid tissue for arabidopsis. Please choose from: " + ", ".join(allowed)
+            )
+
+    return species, tissue
+
+
+def _normalize_marker_list(markers, *, species: str, top_n: int = 10):
+    """Accept list/tuple/set/comma-separated string -> cleaned gene list."""
+    if markers is None:
+        raise ValueError("markers must be a gene list or comma-separated string")
+
+    if isinstance(markers, str):
+        # Allow "CD3D, CD14, LYZ" or newline-separated lists
+        parts = []
+        for chunk in markers.replace("\n", ",").split(","):
+            gene = chunk.strip()
+            if gene:
+                parts.append(gene)
+        marker_gene_list = parts
+    elif isinstance(markers, (list, tuple, set)):
+        marker_gene_list = []
+        for item in markers:
+            gene = str(item).strip()
+            if gene:
+                marker_gene_list.append(gene)
+    else:
+        raise ValueError(
+            "markers must be a list of gene symbols or a comma-separated string"
+        )
+
+    if not marker_gene_list:
+        raise ValueError("markers is empty")
+
+    if species == "mouse":
+        marker_gene_list = [
+            g for g in marker_gene_list if not str(g).upper().startswith("ENSMUSG")
+        ]
+    if species == "arabidopsis":
+        marker_gene_list = normalize_arabidopsis_marker_list(
+            marker_gene_list, db8=db8
+        )
+
+    if top_n is not None and top_n > 0:
+        marker_gene_list = marker_gene_list[: int(top_n)]
+
+    if not marker_gene_list:
+        raise ValueError("No usable marker genes left after cleaning")
+
+    return marker_gene_list
+
+
 def _normalize_scanpy_marker_columns(markerTable: pd.DataFrame) -> pd.DataFrame:
     """Map Scanpy rank_genes_groups_df column names to CellTyper's gene/cluster schema."""
     out = markerTable.copy()
@@ -192,39 +285,48 @@ def _process_cluster(
             print(f"Processing cluster {cluster_label}")
             print()
 
-    fin_states = CellTyper.app.invoke(
-        {
-            "db1": db1,
-            "db2": db2,
-            "db3": db3.copy(),
-            "db5": db5,
-            "db6": db6,
-            "db8": db8,
-            "ont": ont,
-            "marker_cell_graph": None,
-            "celltype_candidates": [],
-            "fin_celltype": None,
-            "pbar": None,
-            "cluster_id": cluster_label,
-            "progress_disable": progress_disable,
-            "markers": markers_str,
-            "species": species,
-            "tissue": tissue,
-            "condition": condition,
-            "gene_desc_summary_context": "",
-            "genes_ids": {},
-            "gene_func_summary_context": "",
-            "gene_cell_summary_context": "",
-            "gene_pathway_context": "",
-            "gene_protein_loc_context": "",
-            "ppi_context": "",
-            "genetriever_flag": genetriever_flag,
-            "unknown_genes": [],
-            "llm_model": "" if llm_model is None else str(llm_model).strip(),
-            "graph_provided": graph_provided,
-        },
-        config={"recursion_limit": 10000},
-    )
+    try:
+        fin_states = CellTyper.app.invoke(
+            {
+                "db1": db1,
+                "db2": db2,
+                "db3": db3.copy(),
+                "db5": db5,
+                "db6": db6,
+                "db8": db8,
+                "ont": ont,
+                "marker_cell_graph": None,
+                "celltype_candidates": [],
+                "fin_celltype": None,
+                "pbar": None,
+                "cluster_id": cluster_label,
+                "progress_disable": progress_disable,
+                "markers": markers_str,
+                "species": species,
+                "tissue": tissue,
+                "condition": condition,
+                "gene_desc_summary_context": "",
+                "genes_ids": {},
+                "gene_func_summary_context": "",
+                "gene_cell_summary_context": "",
+                "gene_pathway_context": "",
+                "gene_protein_loc_context": "",
+                "ppi_context": "",
+                "genetriever_flag": genetriever_flag,
+                "unknown_genes": [],
+                "llm_model": "" if llm_model is None else str(llm_model).strip(),
+                "graph_provided": graph_provided,
+            },
+            config={"recursion_limit": 10000},
+        )
+    except Exception as exc:
+        with _print_lock:
+            print(
+                f"[CellTyper] cluster {cluster_label} failed: "
+                f"{type(exc).__name__}: {exc}",
+                flush=True,
+            )
+        raise
 
     res_celltype = fin_states["fin_celltype"]
     res_display = fin_states.get("fin_celltype_display") or res_celltype
@@ -237,14 +339,27 @@ def _process_cluster(
         if g is None:
             try:
                 g = construct_marker_graph(fin_states)["marker_cell_graph"]
-            except Exception:
+            except Exception as exc:
+                with _print_lock:
+                    print(
+                        f"[CellTyper] marker graph build failed "
+                        f"(cluster {cluster_label}): {type(exc).__name__}: {exc}",
+                        flush=True,
+                    )
                 try:
                     st = {
                         **fin_states,
                         "pbar": tqdm(total=100, disable=True, leave=False),
                     }
                     g = construct_marker_graph(st)["marker_cell_graph"]
-                except Exception:
+                except Exception as exc2:
+                    with _print_lock:
+                        print(
+                            f"[CellTyper] marker graph retry failed "
+                            f"(cluster {cluster_label}): "
+                            f"{type(exc2).__name__}: {exc2}",
+                            flush=True,
+                        )
                     g = None
         if g is not None:
             payload = marker_cell_graph_image_payload(g)
@@ -316,18 +431,7 @@ def run_celltyper(
     if max_workers < 1:
         raise ValueError("max_workers must be >= 1")
 
-    if species not in ["human", "mouse", "arabidopsis"]:
-        raise ValueError("Invalid species. Please choose from: human, mouse, arabidopsis")
-
-    if species == "human":
-        if tissue not in ["adipose tissue", "adrenal gland", "axilla", "blood", "bladder organ", "bone marrow", "brain", "breast", "colon", "embryo", "endocrine gland", "esophagus", "exocrine gland", "eye", "fallopian tube", "heart", "intestine", "kidney", "lamina propria", "large intestine", "liver", "lung", "lymph node", "mucosa", "musculature", "nose", "omentum", "ovary", "pancreas", "pleural fluid", "placenta", "prostate gland", "respiratory system", "saliva", "skeletal system", "skin of body", "small intestine", "spleen", "stomach", "tongue", "urinary bladder", "uterus", "vasculature"]:
-            raise ValueError("Invalid tissue for human. Please choose from: adipose tissue, adrenal gland, axilla, blood, bladder organ, bone marrow, brain, breast, colon, embryo, endocrine gland, esophagus, exocrine gland, eye, fallopian tube, heart, intestine, kidney, lamina propria, large intestine, liver, lung, lymph node, mucosa, musculature, nose, omentum, ovary, pancreas, pleural fluid, placenta, prostate gland, respiratory system, saliva, skeletal system, skin of body, small intestine, spleen, stomach, tongue, urinary bladder, uterus, vasculature")
-    elif species == "mouse":
-        if tissue not in ["kidney", "adipose tissue", "blood", "bone marrow", "brain", "colon", "embryo", "endocrine gland", "exocrine gland", "eye", "heart", "large intestine", "liver", "lung", "lymph node", "mucosa", "musculature", "ovary", "pancreas", "prostate gland", "respiratory system", "skeletal system", "skin of body", "small intestine", "spleen", "tongue", "urethra", "urinary bladder", "vasculature"]:
-            raise ValueError("Invalid tissue for mouse. Please choose from: kidney, adipose tissue, blood, bone marrow, brain, colon, embryo, endocrine gland, exocrine gland, eye, heart, large intestine, liver, lung, lymph node, mucosa, musculature, ovary, pancreas, prostate gland, respiratory system, skeletal system, skin of body, small intestine, spleen, tongue, urethra, urinary bladder, vasculature")
-    elif species == "arabidopsis":
-        if tissue not in ["shoot", "seedling", "root", "leaf", "fruit", "flower", "shoot apex", "stem"]:
-            raise ValueError("Invalid tissue for arabidopsis. Please choose from: shoot, seedling, root, leaf, fruit, flower, shoot apex, stem")
+    species, tissue = _validate_species_tissue(species, tissue)
 
     markerTable, fc_col, threshold = _prepare_marker_table(markerTable)
 
@@ -410,6 +514,107 @@ def run_celltyper(
             tissue=tissue,
             condition=condition,
             clusters=cluster_rows,
+        )
+        write_html_report(html_report_path, html_doc)
+        out["html_report_path"] = html_report_path
+
+    return out
+
+
+def run_celltyper_from_markers(
+    markers,
+    species,
+    tissue,
+    condition,
+    *,
+    cluster_id="0",
+    top_n=10,
+    genetriever_flag=False,
+    graph_provided=True,
+    html_report_path=None,
+    llm_model="gpt-5.2",
+    openai_api_key=None,
+):
+    """Annotate one cluster from a marker gene list (no marker table required).
+
+    Parameters
+    ----------
+    markers:
+        Gene symbols as a list (``["CD3D", "CD14"]``) or a comma-separated
+        string (``"CD3D, CD14, LYZ"``).
+    cluster_id:
+        Label used in logs / report for this single cluster.
+    top_n:
+        Keep at most this many markers (same default budget as table mode).
+    html_report_path:
+        Optional HTML report path. Default ``None`` skips report writing.
+
+    Returns
+    -------
+    dict
+        ``predicted``, ``predicted_display``, ``marker_genes``, ``cluster_id``,
+        and optionally ``html_report_path`` / ``cluster_row``.
+    """
+    _ensure_openai_api_key(openai_api_key)
+
+    species, tissue = _validate_species_tissue(species, tissue)
+    condition = str(condition).lower().strip()
+
+    marker_gene_list = _normalize_marker_list(
+        markers, species=species, top_n=top_n
+    )
+    markers_str = ", ".join(marker_gene_list)
+    cluster_label = str(cluster_id)
+
+    print(
+        f"CellTyper (single cluster): id={cluster_label}, "
+        f"{len(marker_gene_list)} marker(s)."
+    )
+    print()
+
+    job = {
+        "index": 0,
+        "val": cluster_label,
+        "cluster_label": cluster_label,
+        "is_named_cluster": True,
+        "marker_gene_list": marker_gene_list,
+        "markers_str": markers_str,
+    }
+    result = _process_cluster(
+        job,
+        species=species,
+        tissue=tissue,
+        condition=condition,
+        genetriever_flag=genetriever_flag,
+        graph_provided=graph_provided,
+        llm_model=llm_model,
+        progress_disable=False,
+        announce_start=True,
+    )
+
+    print()
+    print("Summary")
+    print("-------")
+    print(f"Cluster {result['cluster_label']}: {result['res_display']}")
+
+    out = {
+        "cluster_id": result["cluster_label"],
+        "marker_genes": marker_gene_list,
+        "predicted": result["res_celltype"],
+        "predicted_display": result["res_display"],
+        "cluster_row": result["cluster_row"],
+        # Convenience aliases matching multi-cluster output shape
+        "cluster_ids": [result["cluster_label"]],
+        "celltypes": [result["res_celltype"]],
+    }
+
+    if html_report_path:
+        html_doc = build_html_report(
+            markers_path=f"marker_list:{cluster_label}",
+            species=species,
+            tissue=tissue,
+            condition=condition,
+            clusters=[result["cluster_row"]],
         )
         write_html_report(html_report_path, html_doc)
         out["html_report_path"] = html_report_path

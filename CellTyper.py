@@ -14,6 +14,7 @@ from typing import Optional
 from igraph import Graph
 from tqdm import tqdm
 from geneRetriever import scene_gene_desc_summary, scene_gene_function, scene_cell_relatedTo_gene, scene_pathway, scene_protein_location, p_p_interaction_info, unknown_genes_info, route_graph_construction, route_unknown_genes, normalize_arabidopsis_markers_str, get_gene_db
+from openai_llm import openai_text_from_messages, resolve_llm_model
 from typing import TypedDict
 
 
@@ -153,82 +154,14 @@ def _self_consistency_prompt_cache_key(prompt: str) -> str:
   return hashlib.sha256(prompt.encode("utf-8")).hexdigest()
 
 
-def _is_reasoning_model(model: str) -> bool:
-  m = (model or "").strip().lower()
-  if not m:
-    return False
-  return (
-    m.startswith("gpt-5")
-    or m.startswith("o1")
-    or m.startswith("o3")
-    or m.startswith("o4")
-  )
-
-
-def _openai_text_from_messages(
-  llm,
-  model: str,
-  messages,
-  *,
-  temperature: float = 0.8,
-  prompt_cache_key: Optional[str] = None,
-) -> str:
-  model = (model or "").strip()
-  if not model:
-    return ""
-
-  if _is_reasoning_model(model):
-    kwargs = {
-      "model": model,
-      "input": messages,
-      "reasoning": {"effort": "low"},
-    }
-    if prompt_cache_key:
-      kwargs["prompt_cache_key"] = prompt_cache_key
-    try:
-      response = llm.responses.create(**kwargs)
-      text = getattr(response, "output_text", None) or ""
-      if text.strip():
-        return text
-    except Exception:
-      pass
-
-  chat_kwargs = {
-    "model": model,
-    "messages": messages,
-    "temperature": temperature,
-  }
-  if prompt_cache_key:
-    chat_kwargs["extra_body"] = {"prompt_cache_key": prompt_cache_key}
-  try:
-    completion = llm.chat.completions.create(**chat_kwargs)
-    text = completion.choices[0].message.content or ""
-    if text.strip() or not _is_reasoning_model(model):
-      return text
-  except Exception:
-    if not _is_reasoning_model(model):
-      return ""
-
-  if _is_reasoning_model(model):
-    try:
-      response = llm.responses.create(
-        model=model,
-        input=messages,
-        reasoning={"effort": "low"},
-      )
-      return getattr(response, "output_text", None) or ""
-    except Exception:
-      return ""
-  return ""
-
-
 def _run_self_consistency_sample(llm, llm_model, messages, prompt_cache_key):
-  return _openai_text_from_messages(
+  return openai_text_from_messages(
     llm,
     llm_model,
     messages,
     temperature=0.8,
     prompt_cache_key=prompt_cache_key,
+    reasoning_effort="medium",
   )
 
 
@@ -265,16 +198,14 @@ def select_candidates_from_llm(state):
   markers = state["markers"]
   condition = state["condition"]
   raw_model = state.get("llm_model")
-  if raw_model is None:
-    llm_model = ""
-  else:
-    llm_model = str(raw_model).strip()
-  if not llm_model:
-    llm_model = (
+  llm_model = resolve_llm_model(
+    raw_model,
+    default=(
       os.environ.get("CELLTYPER_LLM_MODEL")
       or os.environ.get("OPENAI_MODEL")
       or "gpt-5.2"
-    ).strip()
+    ).strip(),
+  )
   gene_desc_summary_context = state["gene_desc_summary_context"]
   gene_func_summary_context = state["gene_func_summary_context"]
   gene_cell_summary_context = state["gene_cell_summary_context"]
